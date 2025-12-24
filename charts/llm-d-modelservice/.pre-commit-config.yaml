@@ -1,0 +1,35 @@
+repos:
+  - repo: https://github.com/dadav/helm-schema
+    rev: "0.18.1"
+    hooks:
+      - id: helm-schema
+        args:
+          - --append-newline
+          - --chart-search-root=charts
+          - --add-schema-reference
+          - --helm-docs-compatibility-mode
+          - --skip-auto-generation=required
+          - --no-dependencies
+          - -o=values.schema.tmpl.json
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        exclude: (^.vale/)|(values.schema.json$)
+      - id: check-merge-conflict
+      - id: check-json
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: (^.vale/)|(values.schema.json$)
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+        exclude: examples/output-.*
+  - repo: local
+    hooks:
+      - id: jsonschema-dereference
+        name: jsonschema-dereference
+        entry: python .pre-commit/jsonschema-dereference.py
+        additional_dependencies: [jsonref]
+        language: python
+        files: values\.(schema(\.tmpl)?\.json|yaml)$
+        types_or: [yaml, json]

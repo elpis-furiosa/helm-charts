@@ -1,0 +1,47 @@
+# Furiosa RNGD NPU configuration using furiosaLlmServe mode
+# This configuration is for single-node Furiosa RNGD NPU setup without prefill
+# Models are used from prepopulated model-pvc PVC using Hugging Face Hub
+
+modelArtifacts:
+  name: furiosa-ai/Llama-3.1-8B-Instruct
+  uri: "pvc+hf://model-pvc/furiosa-ai/Llama-3.1-8B-Instruct"
+  size: 50Gi
+  authSecretName: "llm-d-hf-token"
+
+accelerator:
+  type: "furiosa"
+
+# Routing configuration
+routing:
+  proxy:
+    enabled: false
+
+# Decode pod configuration for Furiosa RNGD NPU
+decode:
+  create: true
+  replicas: 1
+  containers:
+    - name: "furiosa-llm"
+      # Use Furiosa LLM image
+      image: "furiosaai/furiosa-llm:latest"
+
+      # Use furiosaLlmServe mode - chart will generate furiosa-llm serve command
+      modelCommand: furiosaLLMServe
+
+      # Only specify Furiosa-specific arguments that differ from defaults
+      args:
+        - --block-size=128
+        - --max-num-seqs=256
+        - --max-model-len=2048
+      ports:
+        - containerPort: 8200
+          protocol: TCP
+
+      mountModelVolume: true
+
+# Disable prefill for simple Furiosa example
+prefill:
+  create: false
+
+# When true, use LeaderWorkerSet for multi-node Furiosa setups
+multinode: false
